@@ -11,7 +11,7 @@ const colStyles = {
   Rejected:  { header: "#FCEBEB", text: "#791F1F", border: "#F7C1C1" },
 };
 
-export default function KanbanBoard({ jobs, setJobs, onUpdated }) {
+export default function KanbanBoard({ jobs, setJobs, onUpdated, onDeleted }) {
   const getColJobs = (status) => jobs.filter((j) => j.status === status);
 
   const onDragEnd = async (result) => {
@@ -36,11 +36,15 @@ export default function KanbanBoard({ jobs, setJobs, onUpdated }) {
     }
   };
 
-  const handleDeleted  = (id)      => setJobs((prev) => prev.filter((j) => j._id !== id));
-  const handleUpdated  = (updated) => {
-    setJobs((prev) => prev.map((j) => j._id === updated._id ? updated : j));
-    if (onUpdated) onUpdated(updated);
-  };
+  const handleDeleted = (id) => {
+  setJobs((prev) => prev.filter((j) => j._id !== id));
+  if (onDeleted) onDeleted(id);
+};
+
+  const handleUpdated = (updated) => {
+  setJobs((prev) => prev.map((j) => j._id === updated._id ? updated : j));
+  if (onUpdated) onUpdated(updated);
+};
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
