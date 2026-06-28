@@ -1,4 +1,4 @@
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import JobCard from "./JobCard";
 import { updateJob } from "../api/jobs";
 
@@ -11,7 +11,7 @@ const colStyles = {
   Rejected:  { header: "#FCEBEB", text: "#791F1F", border: "#F7C1C1" },
 };
 
-export default function KanbanBoard({ jobs, setJobs }) {
+export default function KanbanBoard({ jobs, setJobs, onUpdated }) {
   const getColJobs = (status) => jobs.filter((j) => j.status === status);
 
   const onDragEnd = async (result) => {
@@ -36,7 +36,11 @@ export default function KanbanBoard({ jobs, setJobs }) {
     }
   };
 
-  const handleDeleted = (id) => setJobs((prev) => prev.filter((j) => j._id !== id));
+  const handleDeleted  = (id)      => setJobs((prev) => prev.filter((j) => j._id !== id));
+  const handleUpdated  = (updated) => {
+    setJobs((prev) => prev.map((j) => j._id === updated._id ? updated : j));
+    if (onUpdated) onUpdated(updated);
+  };
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
@@ -56,10 +60,7 @@ export default function KanbanBoard({ jobs, setJobs }) {
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    style={{
-                      ...dropZone,
-                      background: snapshot.isDraggingOver ? "#f8f8ff" : "#fafafa",
-                    }}
+                    style={{ ...dropZone, background: snapshot.isDraggingOver ? "#f8f8ff" : "#fafafa" }}
                   >
                     {colJobs.map((job, index) => (
                       <Draggable key={job._id} draggableId={job._id} index={index}>
@@ -68,12 +69,13 @@ export default function KanbanBoard({ jobs, setJobs }) {
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
-                            style={{
-                              ...provided.draggableProps.style,
-                              opacity: snapshot.isDragging ? 0.85 : 1,
-                            }}
+                            style={{ ...provided.draggableProps.style, opacity: snapshot.isDragging ? 0.85 : 1 }}
                           >
-                            <JobCard job={job} onDeleted={handleDeleted} />
+                            <JobCard
+                              job={job}
+                              onDeleted={handleDeleted}
+                              onUpdated={handleUpdated}
+                            />
                           </div>
                         )}
                       </Draggable>
@@ -95,31 +97,8 @@ export default function KanbanBoard({ jobs, setJobs }) {
   );
 }
 
-const board = {
-  display: "grid",
-  gridTemplateColumns: "repeat(4, 1fr)",
-  gap: 12,
-  alignItems: "start",
-};
-const column = {
-  background: "#fafafa",
-  border: "0.5px solid #e8e8e8",
-  borderRadius: 10,
-  overflow: "hidden",
-  minHeight: 200,
-};
-const colHeader = {
-  padding: "10px 14px",
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-};
-const countBadge = {
-  fontSize: 11, fontWeight: 500,
-  padding: "1px 7px", borderRadius: 10,
-};
-const dropZone = {
-  padding: "10px 8px",
-  minHeight: 160,
-  transition: "background 0.15s",
-};
+const board      = { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, alignItems: "start" };
+const column     = { background: "#fafafa", border: "0.5px solid #e8e8e8", borderRadius: 10, overflow: "hidden", minHeight: 200 };
+const colHeader  = { padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" };
+const countBadge = { fontSize: 11, fontWeight: 500, padding: "1px 7px", borderRadius: 10 };
+const dropZone   = { padding: "10px 8px", minHeight: 160, transition: "background 0.15s" };
