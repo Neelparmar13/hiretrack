@@ -12,16 +12,52 @@ const initialForm = {
   notes: "",
 };
 
-export default function AddJobModal({ onClose, onAdded }) {
-  const [form, setForm] = useState(initialForm);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+const initialErrors = {
+  company: "",
+  role: "",
+  appliedDate: "",
+};
 
-  const handle = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+export default function AddJobModal({ onClose, onAdded }) {
+  const [form, setForm]       = useState(initialForm);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState("");
+  const [errors, setErrors]   = useState(initialErrors);
+
+  const handle = (e) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    // Clear field error on type
+    if (errors[name]) setErrors({ ...errors, [name]: "" });
+  };
+
+  const validate = () => {
+    const newErrors = { company: "", role: "", appliedDate: "" };
+    let isValid = true;
+
+    if (!form.company.trim()) {
+      newErrors.company = "Company name is required";
+      isValid = false;
+    }
+    if (!form.role.trim()) {
+      newErrors.role = "Job role is required";
+      isValid = false;
+    }
+    if (!form.appliedDate) {
+      newErrors.appliedDate = "Applied date is required";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!validate()) return; // stop if validation fails
+
     setLoading(true);
     try {
       const { data } = await createJob(form);
@@ -48,11 +84,25 @@ export default function AddJobModal({ onClose, onAdded }) {
           <div style={row}>
             <div style={field}>
               <label style={label}>Company *</label>
-              <input name="company" value={form.company} onChange={handle} placeholder="Google" required />
+              <input
+                name="company"
+                value={form.company}
+                onChange={handle}
+                placeholder="Google"
+                style={{ borderColor: errors.company ? "#e24b4a" : undefined }}
+              />
+              {errors.company && <span style={errText}>{errors.company}</span>}
             </div>
             <div style={field}>
               <label style={label}>Role *</label>
-              <input name="role" value={form.role} onChange={handle} placeholder="Frontend Developer" required />
+              <input
+                name="role"
+                value={form.role}
+                onChange={handle}
+                placeholder="Frontend Developer"
+                style={{ borderColor: errors.role ? "#e24b4a" : undefined }}
+              />
+              {errors.role && <span style={errText}>{errors.role}</span>}
             </div>
           </div>
 
@@ -67,8 +117,15 @@ export default function AddJobModal({ onClose, onAdded }) {
               </select>
             </div>
             <div style={field}>
-              <label style={label}>Applied date</label>
-              <input type="date" name="appliedDate" value={form.appliedDate} onChange={handle} />
+              <label style={label}>Applied date *</label>
+              <input
+                type="date"
+                name="appliedDate"
+                value={form.appliedDate}
+                onChange={handle}
+                style={{ borderColor: errors.appliedDate ? "#e24b4a" : undefined }}
+              />
+              {errors.appliedDate && <span style={errText}>{errors.appliedDate}</span>}
             </div>
           </div>
 
@@ -123,9 +180,10 @@ const modal = {
   padding: "1.5rem", width: "100%", maxWidth: 560,
   maxHeight: "90vh", overflowY: "auto",
 };
-const row   = { display: "flex", gap: 10 };
-const field = { display: "flex", flexDirection: "column", gap: 4, flex: 1 };
-const label = { fontSize: 12, color: "#666", fontWeight: 500 };
+const row    = { display: "flex", gap: 10 };
+const field  = { display: "flex", flexDirection: "column", gap: 4, flex: 1 };
+const label  = { fontSize: 12, color: "#666", fontWeight: 500 };
+const errText = { fontSize: 11, color: "#e24b4a", marginTop: 2 };
 const closeBtn = {
   background: "none", border: "none",
   fontSize: 18, cursor: "pointer", color: "#666",
